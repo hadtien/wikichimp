@@ -66,7 +66,7 @@ class SignupPage(Handler):
 class LogoutPage(Handler):
     def get(self):
         self.response.headers.add_header('Set-Cookie', 'uname=;Path=/')
-        self.redirect(self.request.url)
+        self.redirect("/")
 
 
 class LoginPage(Handler):
@@ -122,7 +122,7 @@ class EditPage(Handler):
 class WikiPage(Handler):
     def get(self, page_title):
         uname = self.request.cookies.get("uname")  # this is vulnerable to fake cookies
-        logged_in, page_content = uname is not None, ''
+        logged_in, page_content = uname is not None and uname != '', ''
         q = Page.all()
         q.filter("title =", page_title)
         if q.count() > 0:
