@@ -2,12 +2,13 @@ import os
 import webapp2
 import re
 import jinja2
+from time import sleep
 
 import utils
 from db_models import User, Page
 
 template_dir = os.path.join(os.path.dirname(__file__), './templates')
-jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir), autoescape=False)
 
 
 class Handler(webapp2.RequestHandler):
@@ -65,7 +66,7 @@ class SignupPage(Handler):
 class LogoutPage(Handler):
     def get(self):
         self.response.headers.add_header('Set-Cookie', 'uname=;Path=/')
-        self.redirect("/")
+        self.redirect(self.request.url)
 
 
 class LoginPage(Handler):
@@ -91,26 +92,52 @@ class LoginPage(Handler):
 
 
 class EditPage(Handler):
-    pass
+    def get(self, page_title):
+        uname = self.request.cookies.get("uname")  # this is vulnerable to fake cookies
+        if not uname:
+            self.redirect("/login")
+        page_content = ''
+        q = Page.all()
+        q.filter("title =", page_title)
+        if q.count() > 0:
+            page_content = q.get().body
+        self.render("page.html", username=uname, logged_in=True, edit_box=True, page_content=page_content,
+                    submit_url=self.request.url, view_url=page_title)
+
+    def post(self, page_title):
+        uname = self.request.cookies.get("uname")  # this is vulnerable to fake cookies
+        if not uname:
+            self.redirect("/login")
+        content = self.request.get("content")
+        page = Page(title=page_title, body=content)
+        q = page.all()
+        q.filter("title =", page_title)
+        for q_page in q:  # delete all the fuckers
+            q_page.delete()
+        page.put()
+        sleep(1)  # ugly hack, otherwise the WikiPage cannot find the page in db
+        self.redirect(page_title)
 
 
 class WikiPage(Handler):
-    pass
-
-
-class MainPage(Handler):
-    def get(self):
-        uname = self.request.cookies.get("uname")
-        if uname:
-            self.render("main.html", username=uname, logged_in=True)
+    def get(self, page_title):
+        uname = self.request.cookies.get("uname")  # this is vulnerable to fake cookies
+        logged_in, page_content = uname is not None, ''
+        q = Page.all()
+        q.filter("title =", page_title)
+        if q.count() > 0:
+            page_content = q.get().body
+            self.render("page.html", username=uname, logged_in=logged_in, edit_box=False,
+                        page_content=page_content, edit_url="/_edit" + page_title)
         else:
-            self.render("main.html", logged_in=False)
+            self.redirect("/" + "_edit" + self.request.path)
 
-PAGE_RE = r'(/(?:[a-zA-Z0-9_-]+/?)*)'
-application = webapp2.WSGIApplication([('/', MainPage),
-                                       ('/login', LoginPage),
+
+PAGE_RE = '(/(?:[a-zA-Z0-9_-]+/?)*)'
+application = webapp2.WSGIApplication([('/login', LoginPage),
                                        ('/logout', LogoutPage),
                                        ('/signup', SignupPage),
-                                       (PAGE_RE, WikiPage),
-                                       ('/_edit' + PAGE_RE, EditPage)],
-                                      debug=True)
+                                       ('/_edit' + PAGE_RE, EditPage),
+                                       ('(/)', WikiPage),
+                                       (PAGE_RE, WikiPage)],
+                                       debug=True)

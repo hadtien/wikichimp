@@ -4,6 +4,27 @@
     <title></title>
 </head>
 <body>
+{% if logged_in %}
+    <p>
+        {% if edit_box %}
+            <a href="{{ view_url }}"> view | </a>
+        {% else %}
+            <a href="{{ edit_url }}"> edit | </a>
+        {% endif %}
+        logged in as: <i>{{ username }}</i>(<a href="/logout">logout</a>)
+    </p>
+{% else %}
+    <p><a href="login">login</a> | <a href="signup">signup</a></p>
+{% endif %}
+
+{% if edit_box %}
+<form method="post" action="{{ submit_url }}">
+    <textarea name="content">{{ page_content }}</textarea>
+    <input type="submit" value="submit">
+</form>
+{% else %}
+{{ page_content }}
+{% endif %}
 
 </body>
 </html>
