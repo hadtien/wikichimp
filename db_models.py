@@ -8,7 +8,7 @@ class User(db.Model):
     password_hash = db.StringProperty(required=True)
 
 
-class WikiPage(db.Model):
+class Page(db.Model):
     title = db.StringProperty(required=True)
     body = db.TextProperty(required=True)
     #created = db.DateProperty(auto_now_add=True)

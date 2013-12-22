@@ -5,14 +5,14 @@ import string
 SECRET = "difhbTDJFBKRSTWJRJSEWe439085029384SFJSEFJSE"
 
 
-# returns hash of the password
-def create_pwd_hash(password):
-        return hmac.new(SECRET, password).hexdigest()
-
-
-# returns True iff the hash of given password is equal to h
-def validate_pwd(password, h):
-        return hmac.new(SECRET, password).hexdigest() == h
+# # returns hash of the password
+# def create_pwd_hash(password):
+#         return hmac.new(SECRET, password).hexdigest()
+#
+#
+# # returns True iff the hash of given password is equal to h
+# def validate_pwd(password, h):
+#         return hmac.new(SECRET, password).hexdigest() == h
 
 
 def make_salt():
@@ -21,7 +21,7 @@ def make_salt():
 
 def make_pw_hash(name, pw, salt=None):
     if not salt:
-        salt=make_salt()
+        salt = make_salt()
     h = hashlib.sha256(name + pw + salt).hexdigest()
     return '%s,%s' % (h, salt)
 
