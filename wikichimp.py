@@ -94,7 +94,7 @@ class LoginPage(Handler):
 class EditPage(Handler):
     def get(self, page_title):
         uname = self.request.cookies.get("uname")  # this is vulnerable to fake cookies
-        if not uname:
+        if not uname or uname == '':
             self.redirect("/login")
         page_content = ''
         q = Page.all()
@@ -106,7 +106,7 @@ class EditPage(Handler):
 
     def post(self, page_title):
         uname = self.request.cookies.get("uname")  # this is vulnerable to fake cookies
-        if not uname:
+        if not uname or uname == '':
             self.redirect("/login")
         content = self.request.get("content")
         page = Page(title=page_title, body=content)
